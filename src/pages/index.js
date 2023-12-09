@@ -37,7 +37,7 @@ const Demo = () => {
         <br />
         <Cropper
           ref={cropperRef}
-          style={{ height: "auto", width: "auto" }}
+          style={{ height: 400, width: "auto" }}
           zoomTo={0.5}
           initialAspectRatio={4/3}
           preview=".img-preview"
