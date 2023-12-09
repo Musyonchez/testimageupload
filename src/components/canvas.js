@@ -1,12 +1,11 @@
-import React, { useState } from 'react';
-import Cropper from 'react-cropper';
-import 'cropperjs/dist/cropper.css';
+import React, { useState, useEffect } from 'react';
+import { fabric } from 'fabric';
 
 const CropImage = () => {
- const [src, setSrc] = useState(null);
- const [image, setImage] = useState();
+  const [src, setSrc] = useState(null);
+  const [canvas, setCanvas] = useState(null);
 
- const onFileChange = (e) => {
+  const onFileChange = (e) => {
     e.preventDefault();
     let files = e.target.files;
     let file = files[0];
@@ -21,44 +20,45 @@ const CropImage = () => {
         }
       };
     }
- };
+  };
 
- const onCrop = () => {
-    if (image && image.cropper) {
-      setSrc(image.cropper.getCroppedCanvas().toDataURL());
+  const onCrop = () => {
+    if (canvas) {
+      const croppedImage = canvas.toDataURL('image/jpeg');
+      setSrc(croppedImage);
     }
- };
+  };
 
- const downloadImage = () => {
+  const downloadImage = () => {
     const link = document.createElement('a');
-    link.href = image.cropper.getCroppedCanvas().toDataURL();
+    link.href = canvas.toDataURL('image/jpeg');
     link.download = 'cropped-image';
     link.click();
- };
+  };
 
- return (
+  useEffect(() => {
+    if (src) {
+      const imgElement = new fabric.Image.fromURL(src, (img) => {
+        img.scaleToWidth(600);
+        img.scaleToHeight(400);
+        const canvas = new fabric.Canvas('canvas');
+        canvas.add(img);
+        setCanvas(canvas);
+      });
+    }
+  }, [src]);
+
+  return (
     <div>
       <input type="file" onChange={onFileChange} />
       {src && (
-        <Cropper
-          src={src}
-          style={{ minHeightheight: 600, minWidth: 400, objectFit: 'cover' }}
-          ref={(node) => {
-            setImage(node);
-          }}
-          cropperOptions={{
-            aspectRatio: 16 / 9,
-            viewMode: 1,
-            minCropBoxWidth: 400,
-            minCropBoxHeight: 400,
-          }}
-        />
+        <canvas width={800} height={800} id="canvas" style={{ border: '1px solid black' }}></canvas>
       )}
       <button onClick={onCrop}>Crop</button>
       <br />
       <button onClick={downloadImage}>Download</button>
     </div>
- );
+  );
 };
 
 export default CropImage;

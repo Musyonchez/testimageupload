@@ -1,71 +1,87 @@
-// pages/index.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ReactCrop from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 
-const Home = () => {
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [crop, setCrop] = useState({ unit: '%', width: 30, aspect: 16 / 9 });
-  const [croppedImage, setCroppedImage] = useState(null);
+const CropImage = () => {
+ const [src, setSrc] = useState(null);
+ const [image, setImage] = useState();
+ const [crop, setCrop] = useState({ unit: '%', width: 100, aspect: 16 / 9 });
 
-  const handleImageUpload = async (e) => {
+ const onFileChange = (e) => {
     e.preventDefault();
+    const files = e.target.files;
+    const file = files[0];
+    if (file) {
+      setSrc(URL.createObjectURL(file));
+    }
+ };
 
-    const file = e.target.elements.image.files[0];
+ const onImageLoaded = (img) => {
+    setImage(img);
+ };
 
-    // Display the selected image
-    const reader = new FileReader();
-    reader.onload = () => {
-      setSelectedImage(reader.result);
-    };
-    reader.readAsDataURL(file);
-  };
+ const onCropComplete = (crop) => {
+    makeClientCrop(crop);
+ };
 
-  const handleCropChange = (newCrop) => {
-    setCrop(newCrop);
-  };
+ const makeClientCrop = (crop) => {
+    if (image && crop.width && crop.height) {
+      getCroppedImg(image, crop, 'newFile.jpeg');
+    }
+ };
 
-  const handleCropComplete = (crop, percentCrop) => {
-    // Handle crop completion (if needed)
-  };
+ async function getCroppedImg(image, crop, fileName) {
+    const canvas = document.createElement('canvas');
+    const scaleX = image.naturalWidth / image.width;
+    const scaleY = image.naturalHeight / image.height;
+    canvas.width = crop.width;
+    canvas.height = crop.height;
+    const ctx = canvas.getContext('2d');
 
-  const handleImageCrop = async () => {
-    // Use the cropped data as needed
-    console.log('Cropped Image Data:', croppedImage);
-  };
+    ctx.drawImage(
+      image,
+      crop.x * scaleX,
+      crop.y * scaleY,
+      crop.width * scaleX,
+      crop.height * scaleY,
+      0,
+      0,
+      crop.width,
+      crop.height
+    );
 
-  return (
+    return new Promise((resolve, reject) => {
+      canvas.toBlob((blob) => {
+        blob.name = fileName;
+        window.URL.revokeObjectURL(this.src);
+        this.src = URL.createObjectURL(blob);
+        resolve(blob);
+      }, 'image/jpeg');
+    });
+ }
+
+ const downloadImage = () => {
+    const link = document.createElement('a');
+    link.href = src;
+    link.download = 'cropped-image';
+    link.click();
+ };
+
+ return (
     <div>
-      <form onSubmit={handleImageUpload}>
-        <input type="file" name="image" accept="image/*" />
-        <button type="submit">Upload Image</button>
-      </form>
-
-      {selectedImage && (
-        <div>
-          <h2>Selected Image</h2>
-          <img src={selectedImage} alt="Selected" />
-
-          <h2>Crop Image</h2>
-          <ReactCrop
-            src={selectedImage}
-            crop={crop}
-            onChange={handleCropChange}
-            onComplete={handleCropComplete}
-          />
-
-          <button onClick={handleImageCrop}>Crop Image</button>
-
-          {croppedImage && (
-            <div>
-              <h2>Cropped Image</h2>
-              <img src={croppedImage} alt="Cropped" />
-            </div>
-          )}
-        </div>
+      <input type="file" onChange={onFileChange} />
+      {src && (
+        <ReactCrop
+          src={src}
+          onImageLoaded={onImageLoaded}
+          crop={crop}
+          onChange={(c) => setCrop(c)}
+          onComplete={onCropComplete}
+        />
       )}
+      <button onClick={downloadImage}>Download</button>
     </div>
-  );
+ );
 };
 
-export default Home;
+export default CropImage;
