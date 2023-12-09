@@ -52,7 +52,11 @@ const CropImage = () => {
     <div>
       <input type="file" onChange={onFileChange} />
       {src && (
+<<<<<<< HEAD
         <canvas width={800} height={800} id="canvas" style={{ border: '1px solid black' }}></canvas>
+=======
+        <canvas id="canvas" style={{ border: '1px solid black' }}></canvas>
+>>>>>>> faf795af896d39106fd98f1ffa74267696db5081
       )}
       <button onClick={onCrop}>Crop</button>
       <br />
